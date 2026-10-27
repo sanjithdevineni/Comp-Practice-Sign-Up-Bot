@@ -1,0 +1,44 @@
+name: Comp practice sign-up
+
+on:
+  schedule:
+    # Wednesdays at 13:37 UTC = 9:37 AM EDT (8:37 AM EST after Nov 1).
+    - cron: "37 13 * * 3"
+  workflow_dispatch:
+    inputs:
+      group_id:
+        description: "GroupMe group ID to watch (leave blank for the comp team group)"
+        required: false
+        default: ""
+      window_end:
+        description: "Stop listening at this Eastern time, e.g. 23:59 (blank = 14:30)"
+        required: false
+        default: ""
+
+concurrency:
+  group: comp-practice-signup
+  cancel-in-progress: false
+
+jobs:
+  signup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    defaults:
+      run:
+        working-directory: signup-bot
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python signup_bot.py run
+        env:
+          GROUPME_TOKEN: ${{ secrets.GROUPME_TOKEN }}
+          GROUPME_GROUP_ID: ${{ inputs.group_id || secrets.GROUPME_GROUP_ID }}
+          SIGNUP_NAME: ${{ secrets.SIGNUP_NAME }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          ALLOWED_SENDER_IDS: ${{ secrets.ALLOWED_SENDER_IDS }}
+          EXTRA_ANSWERS: ${{ secrets.EXTRA_ANSWERS }}
+          TITLE_KEYWORDS: comp practice
+          WINDOW_END: ${{ inputs.window_end || '14:30' }}
